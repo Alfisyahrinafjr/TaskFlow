@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">TaskFlow</string>
+
+    <string name="title_home">Home</string>
+    <string name="title_progress">Progress</string>
+    <string name="title_settings">Settings</string>
+    <string name="txt_preferences">Preferences</string>
+    <string name="txt_sub_preferences">Fine-tune your editorial workflow</string>
+
+    <string name="sec_appearance">APPEARANCE</string>
+    <string name="lbl_dark_mode">Dark Mode</string>
+    <string name="sub_dark_mode">Night-owl optimized interface</string>
+    <string name="lbl_language">Language</string>
+    <string name="sub_language">Select your interface tongue</string>
+
+    <string name="sec_system">SYSTEM &amp; ABOUT</string>
+    <string name="sub_about">v2.4.0 — Made for Architects</string>
+
+    <string name="analytics_dashboard">ANALYTICS DASHBOARD</string>
+    <string name="weekly_impact">Weekly\nImpact.</string>
+    <string name="total_completed">Total Completed</string>
+    <string name="tasks_by_category">Tasks by Category</string>
+    <string name="priority_distribution">Priority Distribution</string>
+</resources>

@@ -1,0 +1,24 @@
+<resources>
+    <string name="app_name">TaskFlow</string>
+
+    <string name="title_home">Beranda</string>
+    <string name="title_progress">Progres</string>
+    <string name="title_settings">Pengaturan</string>
+    <string name="txt_preferences">Pengaturan</string>
+    <string name="txt_sub_preferences">Sesuaikan alur kerja editorial Anda</string>
+
+    <string name="sec_appearance">TAMPILAN</string>
+    <string name="lbl_dark_mode">Mode Gelap</string>
+    <string name="sub_dark_mode">Antarmuka ramah mode malam</string>
+    <string name="lbl_language">Bahasa</string>
+    <string name="sub_language">Pilih bahasa antarmuka Anda</string>
+
+    <string name="sec_system">SISTEM &amp; TENTANG</string>
+    <string name="sub_about">v2.4.0 — Dibuat untuk Arsitek</string>
+
+    <string name="analytics_dashboard">DASBOR ANALITIK</string>
+    <string name="weekly_impact">Dampak\nMingguan.</string>
+    <string name="total_completed">Total Selesai</string>
+    <string name="tasks_by_category">Tugas berdasarkan Kategori</string>
+    <string name="priority_distribution">Distribusi Prioritas</string>
+</resources>
