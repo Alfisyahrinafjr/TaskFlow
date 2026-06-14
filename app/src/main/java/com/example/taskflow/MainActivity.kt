@@ -1,9 +1,9 @@
 package com.example.taskflow
 
+import com.example.taskflow.ui.screens.LoginScreen
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -13,13 +13,17 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.runtime.CompositionLocalProvider
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.taskflow.data.local.TaskDatabase
+import com.example.taskflow.data.remote.api.HolidayApiService
+import com.example.taskflow.data.repository.TaskRepositoryImpl
 import com.example.taskflow.ui.components.TaskFlowBottomBar
 import com.example.taskflow.ui.screens.AboutScreen
 import com.example.taskflow.ui.screens.AddTaskScreen
@@ -31,14 +35,35 @@ import com.example.taskflow.ui.screens.TaskFlowOnboardingScreen
 import com.example.taskflow.ui.screens.TaskFlowSplashScreen
 import com.example.taskflow.ui.theme.TaskFlowTheme
 import com.example.taskflow.ui.viewmodel.TaskViewModel
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.Locale
 
 class MainActivity : ComponentActivity() {
 
-    private val taskViewModel: TaskViewModel by viewModels()
+    private lateinit var taskViewModel: TaskViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl("https://api-harilibur.vercel.app/api/")
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+        val apiService = retrofit.create(HolidayApiService::class.java)
+
+        val database = TaskDatabase.getDatabase(this)
+        val taskDao = database.taskDao()
+
+        val repository = TaskRepositoryImpl(taskDao, apiService)
+        val viewModelFactory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return TaskViewModel(repository) as T
+            }
+        }
+        taskViewModel = ViewModelProvider(this, viewModelFactory)[TaskViewModel::class.java]
+
         setContent {
             var isGlobalDarkMode by remember { mutableStateOf(false) }
             var globalLanguage by remember { mutableStateOf("English (US)") }
@@ -87,8 +112,18 @@ class MainActivity : ComponentActivity() {
 
                                     composable(Screen.Onboarding.route) {
                                         TaskFlowOnboardingScreen(onOnboardingComplete = {
-                                            navController.navigate(Screen.Dashboard.route) {
+                                            navController.navigate(Screen.Login.route) {
                                                 popUpTo(Screen.Onboarding.route) {
+                                                    inclusive = true
+                                                }
+                                            }
+                                        })
+                                    }
+
+                                    composable(Screen.Login.route) {
+                                        LoginScreen(onLoginSuccess = {
+                                            navController.navigate(Screen.Dashboard.route) {
+                                                popUpTo(Screen.Login.route) {
                                                     inclusive = true
                                                 }
                                             }

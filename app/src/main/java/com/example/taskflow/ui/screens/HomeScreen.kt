@@ -16,11 +16,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.taskflow.R
 import com.example.taskflow.domain.model.Task
 import com.example.taskflow.ui.viewmodel.TaskViewModel
 
@@ -39,13 +37,21 @@ fun TaskFlowHomeScreen(
     val isIndonesian = locale.language == "in" || locale.language == "id"
 
     var selectedFilter by remember { mutableStateOf("ALL") }
-    val masterTaskList by viewModel.tasksState.collectAsState()
+    var searchQuery by remember { mutableStateOf("") }
 
-    val filteredTasks = remember(selectedFilter, masterTaskList) {
-        if (selectedFilter == "ALL") {
+    val masterTaskList by viewModel.allTasks.collectAsState()
+
+    val filteredTasks = remember(selectedFilter, searchQuery, masterTaskList) {
+        val baseFiltered = if (selectedFilter == "ALL") {
             masterTaskList
         } else {
             masterTaskList.filter { it.priority.uppercase() == selectedFilter }
+        }
+
+        if (searchQuery.isBlank()) {
+            baseFiltered
+        } else {
+            baseFiltered.filter { it.title.contains(searchQuery, ignoreCase = true) }
         }
     }
 
@@ -72,10 +78,17 @@ fun TaskFlowHomeScreen(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 TextField(
-                    value = "",
-                    onValueChange = {},
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
                     placeholder = { Text(text = txtSearchPlaceholder, color = Color.Gray, fontSize = 15.sp) },
                     leadingIcon = { Icon(Icons.Default.Search, contentDescription = "Search", tint = Color.Gray) },
+                    trailingIcon = {
+                        if (searchQuery.isNotEmpty()) {
+                            IconButton(onClick = { searchQuery = "" }) {
+                                Text("✕", color = Color.Gray, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.surface,
@@ -85,7 +98,8 @@ fun TaskFlowHomeScreen(
                         focusedIndicatorColor = Color.Transparent,
                         unfocusedIndicatorColor = Color.Transparent
                     ),
-                    shape = RoundedCornerShape(14.dp)
+                    shape = RoundedCornerShape(14.dp),
+                    singleLine = true
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -246,7 +260,6 @@ fun FilterTabButton(
             shape = RoundedCornerShape(50.dp),
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            // 🟢 Karakter '延' misterius di sini sudah dibuang sepenuhnya!
             Text(text = text, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
         }
     } else {

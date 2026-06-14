@@ -28,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.taskflow.R
 import com.example.taskflow.ui.viewmodel.TaskViewModel
-import com.example.taskflow.domain.model.Task
 
 object DashboardColors {
     val BrandBlue = Color(0xFF3B82F6)
@@ -42,19 +41,20 @@ object DashboardColors {
 fun ProgressScreen(
     viewModel: TaskViewModel
 ) {
-    val tasks by viewModel.tasksState.collectAsState()
+    val tasks by viewModel.allTasks.collectAsState()
+
     val totalTasks = tasks.size
     val completedTasks = tasks.count { it.isCompleted }
     val efficiencyPercentage = if (totalTasks > 0) (completedTasks.toFloat() / totalTasks.toFloat()) else 0f
 
-    val kuliahCount = tasks.count { it.category.equals("Kuliah", ignoreCase = true) }
-    val pribadiCount = tasks.count { it.category.equals("Pribadi", ignoreCase = true) }
-    val organisasiCount = tasks.count { it.category.equals("Organisasi", ignoreCase = true) }
-    val lainnyaCount = tasks.count { it.category.equals("Lainnya", ignoreCase = true) }
+    val kuliahCount = tasks.count { it.category.equals("Kuliah", ignoreCase = true) || it.category.equals("College", ignoreCase = true) }
+    val pribadiCount = tasks.count { it.category.equals("Pribadi", ignoreCase = true) || it.category.equals("Personal", ignoreCase = true) }
+    val organisasiCount = tasks.count { it.category.equals("Organisasi", ignoreCase = true) || it.category.equals("Organization", ignoreCase = true) }
+    val lainnyaCount = tasks.count { it.category.equals("Lainnya", ignoreCase = true) || it.category.equals("Others", ignoreCase = true) }
 
-    val highPriorityCount = tasks.count { it.priority.equals("HIGH", ignoreCase = true) }
-    val mediumPriorityCount = tasks.count { it.priority.equals("MEDIUM", ignoreCase = true) }
-    val lowPriorityCount = tasks.count { it.priority.equals("LOW", ignoreCase = true) }
+    val highPriorityCount = tasks.count { it.priority.equals("HIGH", ignoreCase = true) || it.priority.equals("TINGGI", ignoreCase = true) }
+    val mediumPriorityCount = tasks.count { it.priority.equals("MEDIUM", ignoreCase = true) || it.priority.equals("SEDANG", ignoreCase = true) }
+    val lowPriorityCount = tasks.count { it.priority.equals("LOW", ignoreCase = true) || it.priority.equals("RENDAH", ignoreCase = true) }
 
     val context = androidx.compose.ui.platform.LocalContext.current
     val locale = context.resources.configuration.locales[0]
@@ -69,27 +69,12 @@ fun ProgressScreen(
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         letterSpacing = 1.sp,
-                        modifier = Modifier.padding(start = 8.dp),
+                        modifier = Modifier.padding(start = 0.dp),
                         color = MaterialTheme.colorScheme.onBackground
                     )
                 },
-                navigationIcon = {
-                    IconButton(onClick = { /* Handle menu */ }) {
-                        Icon(Icons.Default.Menu, contentDescription = "Menu", tint = MaterialTheme.colorScheme.onBackground)
-                    }
-                },
-                actions = {
-                    Box(
-                        modifier = Modifier
-                            .padding(end = 16.dp)
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(Color.LightGray),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("🧑‍💼")
-                    }
-                },
+                navigationIcon = {},
+                actions = {},
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
         },
@@ -119,31 +104,6 @@ fun ProgressScreen(
                         modifier = Modifier.padding(vertical = 4.dp),
                         color = MaterialTheme.colorScheme.onBackground
                     )
-                    Surface(
-                        color = MaterialTheme.colorScheme.surface,
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.padding(top = 4.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1A888888))
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
-                        ) {
-                            Icon(
-                                Icons.Default.DateRange,
-                                contentDescription = null,
-                                tint = DashboardColors.BrandBlue,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                "Oct 12 - Oct 19",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 12.sp,
-                                color = Color.Gray
-                            )
-                        }
-                    }
                 }
             }
 
@@ -219,7 +179,9 @@ fun ProgressScreen(
                                 fontSize = 18.sp,
                                 color = MaterialTheme.colorScheme.onBackground
                             )
-                            Icon(Icons.Default.MoreHoriz, contentDescription = "More", tint = Color.Gray)
+                            IconButton(onClick = {}) {
+                                Icon(Icons.Default.MoreHoriz, contentDescription = "More", tint = Color.Gray)
+                            }
                         }
                         Spacer(Modifier.height(24.dp))
 
@@ -282,11 +244,62 @@ fun ProgressScreen(
                 }
             }
 
+            item {
+                val holidayList by viewModel.holidays.collectAsState()
+
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(24.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x1A888888)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Text(
+                            text = if (isIndonesian) "HARI LIBUR NASIONAL (API)" else "NATIONAL HOLIDAYS (API)",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Spacer(Modifier.height(16.dp))
+
+                        if (holidayList.isEmpty()) {
+                            Text(
+                                text = if (isIndonesian) "Mengunduh data libur..." else "Loading holidays...",
+                                fontSize = 14.sp,
+                                color = Color.Gray
+                            )
+                        } else {
+                            holidayList.take(5).forEach { holiday ->
+                                Row(
+                                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = holiday.name,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp,
+                                            color = MaterialTheme.colorScheme.onSurface
+                                        )
+                                        Text(
+                                            text = holiday.date,
+                                            fontSize = 12.sp,
+                                            color = Color.Gray
+                                        )
+                                    }
+                                    Text(text = "🔴", fontSize = 14.sp)
+                                }
+                                HorizontalDivider(color = Color(0x1A888888), modifier = Modifier.padding(vertical = 4.dp))
+                            }
+                        }
+                    }
+                }
+            }
+
             item { Spacer(modifier = Modifier.height(32.dp)) }
         }
     }
 }
-
 
 @Composable
 fun CircularProgressIndicatorCustom(progress: Float, size: Dp, strokeWidth: Dp, unfilledColor: Color) {

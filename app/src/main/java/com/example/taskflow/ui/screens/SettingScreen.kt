@@ -69,18 +69,18 @@ fun SettingsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = txtTitle, fontWeight = FontWeight.Bold, fontSize = 16.sp, color = MaterialTheme.colorScheme.onBackground) },
-                navigationIcon = {
-                    IconButton(onClick = { }) {
-                        Icon(Icons.Default.Menu, contentDescription = "Menu", tint = MaterialTheme.colorScheme.onBackground)
-                    }
+                title = {
+                    Text(
+                        text = if (currentLanguage == "Indonesia") "PENGATURAN" else "SETTINGS",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        letterSpacing = 1.sp,
+                        color = MaterialTheme.colorScheme.onBackground
+                    )
                 },
-                actions = {
-                    Box(modifier = Modifier.padding(end = 16.dp).size(36.dp).clip(CircleShape).background(Color.LightGray), contentAlignment = Alignment.Center) {
-                        Text("🧑‍💼")
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
+                navigationIcon = {},
+                actions = {},
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         },
         containerColor = MaterialTheme.colorScheme.background

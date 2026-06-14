@@ -36,27 +36,36 @@ fun AddTaskScreen(
 
     val defaultCategory = if (isIndonesian) "Kuliah" else "Engineering"
 
-    // State form utama
     var taskTitle by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var category by remember { mutableStateOf(defaultCategory) }
     var deadline by remember { mutableStateOf("mm/dd/yyyy") }
     var selectedPriority by remember { mutableStateOf("Medium") }
     var isCompletedState by remember { mutableStateOf(false) }
+    val existingTask by viewModel.selectedTask.collectAsState()
 
-    // LOAD DATA LAMA JIKA MODE EDIT
     LaunchedEffect(taskId) {
         if (taskId != null) {
-            viewModel.getTaskById(taskId) { existingTask ->
-                existingTask?.let {
-                    taskTitle = it.title
-                    description = it.description
-                    category = it.category
-                    deadline = it.deadline
-                    selectedPriority = it.priority
-                    isCompletedState = it.isCompleted
-                }
-            }
+            viewModel.getTaskById(taskId)
+        } else {
+            viewModel.clearSelectedTask()
+            taskTitle = ""
+            description = ""
+            category = defaultCategory
+            deadline = "mm/dd/yyyy"
+            selectedPriority = "Medium"
+            isCompletedState = false
+        }
+    }
+
+    LaunchedEffect(existingTask) {
+        existingTask?.let {
+            taskTitle = it.title
+            description = it.description
+            category = it.category
+            deadline = it.deadline
+            selectedPriority = it.priority
+            isCompletedState = it.isCompleted
         }
     }
 
@@ -104,7 +113,6 @@ fun AddTaskScreen(
     ) {
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Badge Atas
         Surface(
             color = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f),
             shape = RoundedCornerShape(50.dp)
@@ -150,14 +158,14 @@ fun AddTaskScreen(
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        CustomLabel(if (isIndonesian) "JUDUL TUGAS" else "TASK TITLE")
+        CustomLabel(text = if (isIndonesian) "JUDUL TUGAS" else "TASK TITLE")
         CustomTextField(
             value = taskTitle,
             onValueChange = { taskTitle = it },
             placeholder = txtPlaceTitle
         )
 
-        CustomLabel(if (isIndonesian) "DESKRIPSI" else "DESCRIPTION")
+        CustomLabel(text = if (isIndonesian) "DESKRIPSI" else "DESCRIPTION")
         CustomTextField(
             value = description,
             onValueChange = { description = it },
@@ -165,13 +173,90 @@ fun AddTaskScreen(
             isMultiline = true
         )
 
-        CustomLabel(if (isIndonesian) "KATEGORI" else "CATEGORY")
+        CustomLabel(text = if (isIndonesian) "KATEGORI" else "CATEGORY")
+
+        var expandedByCategory by remember { mutableStateOf(false) }
+        val categoriesList = if (isIndonesian) {
+            listOf("Kuliah", "Pribadi", "Organisasi", "Lainnya")
+        } else {
+            listOf("College", "Personal", "Organization", "Others")
+        }
+
+        ExposedDropdownMenuBox(
+            expanded = expandedByCategory,
+            onExpandedChange = { expandedByCategory = !expandedByCategory }
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .menuAnchor(MenuAnchorType.PrimaryNotEditable) // Mengunci anchor dropdown M3
+                    .clickable { expandedByCategory = true }
+                    .padding(16.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = category, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+
+            ExposedDropdownMenu(
+                expanded = expandedByCategory,
+                onDismissRequest = { expandedByCategory = false },
+                modifier = Modifier.background(MaterialTheme.colorScheme.surface)
+            ) {
+                categoriesList.forEach { option ->
+                    DropdownMenuItem(
+                        text = { Text(option, color = MaterialTheme.colorScheme.onSurface) },
+                        onClick = {
+                            category = option
+                            expandedByCategory = false
+                        }
+                    )
+                }
+            }
+        }
+
+        CustomLabel(text = "DEADLINE")
+
+        var showDatePicker by remember { mutableStateOf(false) }
+        val datePickerState = rememberDatePickerState()
+
+        if (showDatePicker) {
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        val selectedDateMillis = datePickerState.selectedDateMillis
+                        if (selectedDateMillis != null) {
+                            val sdf = java.text.SimpleDateFormat("MM/dd/yyyy", java.util.Locale.getDefault())
+                            deadline = sdf.format(java.util.Date(selectedDateMillis))
+                        }
+                        showDatePicker = false
+                    }) {
+                        Text(if (isIndonesian) "Pilih" else "OK")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) {
+                        Text(if (isIndonesian) "Batal" else "Cancel")
+                    }
+                }
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(12.dp))
                 .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable { /* Handler Spinner */ }
+                .clickable { showDatePicker = true }
                 .padding(16.dp)
         ) {
             Row(
@@ -179,19 +264,15 @@ fun AddTaskScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(text = category, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Icon(Icons.Default.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    text = if (deadline == "mm/dd/yyyy") (if (isIndonesian) "Pilih tanggal tenggat waktu" else "Select due date") else deadline,
+                    color = if (deadline == "mm/dd/yyyy") MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(text = "📅", fontSize = 16.sp)
             }
         }
 
-        CustomLabel("DEADLINE")
-        CustomTextField(
-            value = deadline,
-            onValueChange = { deadline = it },
-            placeholder = "mm/dd/yyyy"
-        )
-
-        CustomLabel(if (isIndonesian) "TINGKAT PRIORITAS" else "PRIORITY LEVEL")
+        CustomLabel(text = if (isIndonesian) "TINGKAT PRIORITAS" else "PRIORITY LEVEL")
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -222,6 +303,8 @@ fun AddTaskScreen(
                     } else {
                         viewModel.updateTask(finalTask)
                     }
+                    viewModel.clearSelectedTask()
+
                     onSaveSuccess()
                 }
             },

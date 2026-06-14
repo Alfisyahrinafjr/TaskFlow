@@ -17,7 +17,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.taskflow.domain.model.Task
 import com.example.taskflow.ui.viewmodel.TaskViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,13 +31,11 @@ fun TaskDetailScreen(
     val locale = context.resources.configuration.locales[0]
     val isIndonesian = locale.language == "in" || locale.language == "id"
 
-    var task by remember { mutableStateOf<Task?>(null) }
+    val task by viewModel.selectedTask.collectAsState()
 
     LaunchedEffect(taskId) {
         taskId?.let { id ->
-            viewModel.getTaskById(id) { result ->
-                task = result
-            }
+            viewModel.getTaskById(id)
         }
     }
 
@@ -113,8 +110,8 @@ fun TaskDetailScreen(
                 ) {
                     val priorityValue = currentTask.priority.uppercase()
                     val translatedPriority = when(priorityValue) {
-                        "HIGH" -> if (isIndonesian) "TINGGI" else "HIGH"
-                        "MEDIUM" -> if (isIndonesian) "SEDANG" else "MEDIUM"
+                        "HIGH", "TINGGI" -> if (isIndonesian) "TINGGI" else "HIGH"
+                        "MEDIUM", "SEDANG" -> if (isIndonesian) "SEDANG" else "MEDIUM"
                         else -> if (isIndonesian) "RENDAH" else "LOW"
                     }
 
@@ -146,7 +143,6 @@ fun TaskDetailScreen(
 
                 Button(
                     onClick = {
-
                         val updatedTask = currentTask.copy(isCompleted = true)
                         viewModel.updateTask(updatedTask)
                         onBackClick()
@@ -176,7 +172,6 @@ fun TaskDetailScreen(
                     modifier = Modifier.fillMaxWidth().padding(bottom = 24.dp),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    // 2. TOMBOL EDIT
                     Button(
                         onClick = { onEditClick(currentTask.id) },
                         modifier = Modifier.weight(1f).height(50.dp),

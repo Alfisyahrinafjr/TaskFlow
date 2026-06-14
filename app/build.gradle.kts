@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.taskflow"
-    compileSdk = 35 // Menggunakan SDK standar aman untuk AGP 9
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.taskflow"
